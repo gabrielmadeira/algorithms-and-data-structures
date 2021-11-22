@@ -142,7 +142,7 @@ vector<string> getPrefix(TrieNode *x, string key, int d)
         return nodesWithPrefix;
     }
     char c = key.at(d);
-    cout << (*x).c << "-" << (*x).sofifa_id << " ";
+    // cout << (*x).c << "-" << (*x).sofifa_id << " ";
     if (c < (*x).c)
         return getPrefix((*x).left, key, d);
     if (c > (*x).c)
@@ -225,6 +225,8 @@ void topCommand(HashNode **positionsHashTable, int mPositions, HashNode **player
 void tagCommand(HashNode **tagsHashTable, int mTags, HashNode **playersHashTable, int mPlayers, vector<string> tags)
 {
     HashNode *tag = search(tagsHashTable, tags.back(), mTags, 1);
+    if (tag == NULL)
+        return;
     vector<string> tagsPlayerIDs = (*tag).vecStr;
     tags.pop_back();
     // cout << "{";
@@ -235,6 +237,8 @@ void tagCommand(HashNode **tagsHashTable, int mTags, HashNode **playersHashTable
     while (!tags.empty())
     {
         tag = search(tagsHashTable, tags.back(), mTags, 1);
+        if (tag == NULL)
+            return;
         vector<string> currentTagPlayerIDs = (*tag).vecStr;
 
         // cout << "{";
@@ -272,7 +276,6 @@ void tagCommand(HashNode **tagsHashTable, int mTags, HashNode **playersHashTable
     {
         HashNode *player = search(playersHashTable, tagsPlayerIDs[i], mPlayers, 0);
         cout << tagsPlayerIDs[i] << " | " << (*player).vecStr[0] << " | " << (*player).vecStr[1] << " | " << (*player).vecFlt[1] << " | " << (*player).vecInt[0] << "\n";
-        i++;
     }
 }
 
@@ -410,9 +413,6 @@ void processPositions(HashNode **positionsHashTable, int mPositions, HashNode **
                 if ((*player).vecInt[0] != 0)
                     (*player).vecFlt[1] = (*player).vecFlt[0] / (float)((*player).vecInt[0]);
 
-                if ((*player).vecInt[0] == 0 && (*player).vecFlt[0] != 0)
-                    cout << (*player).vecFlt[0] << " ";
-
                 int minRatings = 1000; // change to 1000 CHECK
                 if ((*player).vecInt[0] >= minRatings)
                 {
@@ -427,7 +427,7 @@ void processPositions(HashNode **positionsHashTable, int mPositions, HashNode **
                         if (playerPositions[j] != ',')
                         {
                             positionName.push_back(playerPositions[j]);
-                            if ((j + 1 == strSize - 1) || (playerPositions[j + 1] == ','))
+                            if ((j + 1 == strSize) || (playerPositions[j + 1] == ','))
                             {
                                 HashNode *position = search(positionsHashTable, positionName, mPositions, 1);
                                 if (position == NULL)
@@ -487,6 +487,9 @@ void processTags(HashNode **tagsHashTable, int mTags)
 
         field = parser3.next_field();
         string tagName = *field.data;
+
+        // if (sofifa_id == "202126")
+        //     cout << "-------------" << tagName << "\n";
 
         HashNode *tag = search(tagsHashTable, tagName, mTags, 1);
         if (tag == NULL)
@@ -671,10 +674,33 @@ int main()
 
     processData(trieRoot, playersHashTable, mPlayers, usersHashTable, mUsers, positionsHashTable, mPositions, tagsHashTable, mTags);
 
+    // for (int i = 0; i < mPositions; i++)
+    // {
+    //     if (positionsHashTable[i] != NULL)
+    //         cout << (*positionsHashTable[i]).c << " ";
+    // }
+    // cout << "\n";
+
+    // for (int i = 0; i < mTags; i++)
+    // {
+    //     if (tagsHashTable[i] != NULL)
+    //         cout << "|" << (*tagsHashTable[i]).c << "| ";
+    // }
+    // cout << "\n";
+
+    // playerCommand(trieRoot, playersHashTable, mPlayers, "Frant");
+    // userCommand(usersHashTable, mUsers, playersHashTable, mPlayers, "88852");
+    // topCommand(positionsHashTable, mPositions, playersHashTable, mPlayers, "GK", 5);
+    // topCommand(positionsHashTable, mPositions, playersHashTable, mPlayers, "LW", 10);
+    // vector<string> tagsTest = {"Clinical Finisher", "Team Player"};
+    // tagCommand(tagsHashTable, mTags, playersHashTable, mPlayers, tagsTest);
+    // tagsTest = {"Brazil", "Dribbler", "Playmaker", "Juventus"};
+    // tagCommand(tagsHashTable, mTags, playersHashTable, mPlayers, tagsTest);
+
     // -----------
     end = chrono::steady_clock::now();
     totalTimeInSeconds = float(chrono::duration_cast<chrono::nanoseconds>(end - begin).count() / float(1000000000));
-    cout << "Data proccess time: " << totalTimeInSeconds << "\n";
+    cout << "Data process time: " << totalTimeInSeconds << "\n";
     // -----------
 
     console(trieRoot, playersHashTable, mPlayers, usersHashTable, mUsers, positionsHashTable, mPositions, tagsHashTable, mTags);
