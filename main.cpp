@@ -1,8 +1,20 @@
+/*
+=========================================================================
+
+                    Trabalho Final - FIFA21 - Players
+        Classificação e Pesquisa de Dados - INF01124 - 2021/1
+
+                        Integrantes do grupo:
+                    Gabriel Madeira (00322863)
+                   Henrique Borges Manzke (00326970)
+
+=========================================================================
+*/
 #include <bits/stdc++.h>
 #include "lib/parser.hpp"
 #include <chrono>
 #include <sstream>
-#include <windows.h> // WinApi header
+#include <windows.h>
 
 using namespace std;
 
@@ -430,7 +442,6 @@ void proccessPlayers(TrieNode *trieRoot, HashNode **playersHashTable, int mPlaye
     parser.delimiter(',');
     for (auto &row : parser)
     {
-
         auto field = parser.next_field();
         string sofifa_id = *field.data;
 
@@ -441,13 +452,9 @@ void proccessPlayers(TrieNode *trieRoot, HashNode **playersHashTable, int mPlaye
         string player_positions = *field.data;
 
         vector<string> playerStrFields = {name, player_positions}; // [name, player_positions]
-
-        vector<int> playerIntFields = {0}; // [rating_count]
-
-        vector<float> playerFloatFields = {0, 0}; // [rating_sum, global_rating]
-
+        vector<int> playerIntFields = {0};                         // [rating_count]
+        vector<float> playerFloatFields = {0, 0};                  // [rating_sum, global_rating]
         insert(playersHashTable, mPlayers, 0, sofifa_id, playerStrFields, playerIntFields, playerFloatFields);
-
         put(trieRoot, name, sofifa_id, 0);
     }
 }
@@ -476,29 +483,7 @@ void proccessUsers(HashNode **usersHashTable, int mUsers, HashNode **playersHash
         float rating = stof(*field.data);
 
         if ((count % 1000000 == 0) && (count != 0))
-        {
             cout << "-- Ratings count=" << count << " | time=" << totalTimeInSeconds() << "\n";
-            // int emptyPositions = 0;
-            // int emptyPositionsParcial = 0;
-            // for (int i = 0; i < mUsers; i++)
-            // {
-            //     if (usersHashTable[i] == NULL)
-            //     {
-            //         emptyPositions++;
-            //         emptyPositionsParcial++;
-            //     }
-            //     if (i % 25000 == 0)
-            //     {
-            //         cout << i << ": " << emptyPositionsParcial << " ";
-            //         emptyPositionsParcial = 0;
-            //     }
-            // }
-            // cout << "\n";
-            // cout << "Empty positions: " << emptyPositions << "\n";
-            // cout << "User count: " << userCount << "\n";
-            // cout << "Colisions count:" << colisionsCount << "\n";
-            // cout << count << "\n";
-        }
         count++;
 
         HashNode *player = search(playersHashTable, sofifa_id, mPlayers, 0);
@@ -561,7 +546,7 @@ void proccessPositions(HashNode **positionsHashTable, int mPositions, HashNode *
                 if ((*player).vecInt[0] != 0)
                     (*player).vecFlt[1] = (*player).vecFlt[0] / (float)((*player).vecInt[0]);
 
-                int minRatings = 1000; // change to 1000 CHECK
+                int minRatings = 1000;
                 if ((*player).vecInt[0] >= minRatings)
                 {
                     float currentPlayerRating = (*player).vecFlt[1];
@@ -681,21 +666,7 @@ void proccessData(TrieNode *trieRoot, HashNode **playersHashTable, int mPlayers,
     cout << "tagsHashTable | m=" << mTags << " | colisions=" << colisionsCount << " | time=" << totalTimeInSeconds() << "\n\n";
 
     cout << "Data proccess time: " << totalTimeInSeconds() << "\n\n";
-
     cout << "-----------------------------\n\n";
-
-    return;
-
-    // int emptyPositions = 0;
-    // for (int i = 0; i < mUsers; i++)
-    // {
-    //     if (usersHashTable[i] == NULL)
-    //     {
-    //         emptyPositions++;
-    //     }
-    // }
-    // cout << "Empty positions: " << emptyPositions << "\n";
-    // cout << "User count: " << userCount << "\n";
 }
 
 bool isNumber(const string &str)
@@ -726,7 +697,7 @@ void console(TrieNode *trieRoot, HashNode **playersHashTable, int mPlayers, Hash
 
         if (end == -1)
         {
-            if (command == "exit\0") // novo comando para os dois pontos e conveniencia
+            if (command == "exit\0")
             {
                 return;
             }
@@ -739,17 +710,14 @@ void console(TrieNode *trieRoot, HashNode **playersHashTable, int mPlayers, Hash
 
         if (command1 == "player\0")
         {
-            // command2 = player
-            playerCommand(trieRoot, playersHashTable, mPlayers, command2); //WARNINGMUSTCHECK
+            playerCommand(trieRoot, playersHashTable, mPlayers, command2);
             continue;
         }
         if (command1 == "user\0")
         {
             if (isNumber(command2))
             {
-                // command2 = user id
-                userCommand(usersHashTable, mUsers, playersHashTable, mPlayers, command2); //WARNINGMUSTCHECK
-                //cout << "user: " << command2 << "\n";
+                userCommand(usersHashTable, mUsers, playersHashTable, mPlayers, command2);
             }
             else
                 cout << "user id's are composed only by numbers\n";
@@ -775,10 +743,6 @@ void console(TrieNode *trieRoot, HashNode **playersHashTable, int mPlayers, Hash
             }
             if (!(tags.empty()))
                 tagCommand(tagsHashTable, mTags, playersHashTable, mPlayers, tags);
-            //for (int i = 0; i < tags.size(); i++)
-            //{
-            //    cout << i << stags[i] << "\n";
-            //}
             continue;
         }
 
@@ -796,9 +760,6 @@ void console(TrieNode *trieRoot, HashNode **playersHashTable, int mPlayers, Hash
                 if (command2.at(0) == '\'' && command2.at(command2.length() - 1) == '\'')
                 {
                     command2 = command2.substr(1, command2.length() - 2);
-                    //cout << "command2: " << command2 << "\n";
-                    // commandN = number of top positions required top5 = 5
-                    // command2 = position
                     topCommand(positionsHashTable, mPositions, playersHashTable, mPlayers, command2, stoi(commandN));
                 }
                 else
@@ -814,11 +775,11 @@ int main()
 {
     startTime = chrono::steady_clock::now();
 
-    int mPlayers = 70000; // 2*19000
+    int mPlayers = 70000;
     HashNode **playersHashTable = new HashNode *[mPlayers]();
     TrieNode *trieRoot = new TrieNode();
 
-    int mUsers = 200000; // 2 * 140000
+    int mUsers = 200000;
     HashNode **usersHashTable = new HashNode *[mUsers]();
 
     int mPositions = 20;
@@ -828,46 +789,6 @@ int main()
     HashNode **tagsHashTable = new HashNode *[mTags]();
 
     proccessData(trieRoot, playersHashTable, mPlayers, usersHashTable, mUsers, positionsHashTable, mPositions, tagsHashTable, mTags);
-
-    // for (int i = 0; i < mPositions; i++)
-    // {
-    //     if (positionsHashTable[i] != NULL)
-    //     {
-    //         cout << (*positionsHashTable[i]).c << " ";
-    //         HashNode *position = (*positionsHashTable[i]).next;
-    //         while (position != NULL)
-    //         {
-    //             cout << (*position).c << " ";
-    //             position = (*position).next;
-    //         }
-    //     }
-    // }
-    // cout << "\n";
-
-    // for (int i = 0; i < mTags; i++)
-    // {
-    //     if (tagsHashTable[i] != NULL)
-    //     {
-    //         cout << "|" << (*tagsHashTable[i]).c << "| ";
-    //         HashNode *tag = (*tagsHashTable[i]).next;
-    //         while (tag != NULL)
-    //         {
-    //             cout << "|" << (*tag).c << "| ";
-    //             tag = (*tag).next;
-    //         }
-    //     }
-    // }
-    // cout << "\n";
-
-    // playerCommand(trieRoot, playersHashTable, mPlayers, "Frant");
-    // userCommand(usersHashTable, mUsers, playersHashTable, mPlayers, "88852");
-    // topCommand(positionsHashTable, mPositions, playersHashTable, mPlayers, "GK", 5);
-    // topCommand(positionsHashTable, mPositions, playersHashTable, mPlayers, "LW", 10);
-    // vector<string> tagsTest = {"Clinical Finisher", "Team Player"};
-    // tagCommand(tagsHashTable, mTags, playersHashTable, mPlayers, tagsTest);
-    // tagsTest = {"Brazil", "Dribbler", "Playmaker", "Juventus"};
-    // tagCommand(tagsHashTable, mTags, playersHashTable, mPlayers, tagsTest);
-
     console(trieRoot, playersHashTable, mPlayers, usersHashTable, mUsers, positionsHashTable, mPositions, tagsHashTable, mTags);
     return 0;
 }
