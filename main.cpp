@@ -1,11 +1,70 @@
 #include <bits/stdc++.h>
 #include "lib/parser.hpp"
 #include <chrono>
+#include <sstream>
+#include <windows.h> // WinApi header
 
 using namespace std;
 
+HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
 int colisionsCount = 0;
-int colisionsCount2 = 0;
+chrono::steady_clock::time_point startTime;
+float totalTimeInSeconds()
+{
+    chrono::steady_clock::time_point endTime = chrono::steady_clock::now();
+    return float(chrono::duration_cast<chrono::nanoseconds>(endTime - startTime).count() / float(1000000000));
+};
+
+string prd(const double x, const int decDigits, const int width)
+{
+    stringstream ss;
+    ss << fixed << right;
+    ss.fill(' ');            // fill space around displayed #
+    ss.width(width);         // set  width around displayed #
+    ss.precision(decDigits); // set # places after decimal
+    ss << x;
+    return ss.str();
+}
+
+string prd_string(const string s, const int w)
+{
+    stringstream ss, spaces;
+    int padding = w - s.size(); // count excess room to pad
+    for (int i = 0; i < padding; ++i)
+        spaces << " ";
+    ss << spaces.str() << s; // format with padding
+    //if(padding>0 && padding%2!=0)               // if odd #, add 1 space
+    //    ss << " ";
+    return ss.str();
+}
+
+/*! Center-aligns string within a field of width w. Pads with blank spaces
+    to enforce alignment. */
+string center(const string s, const int w)
+{
+    stringstream ss, spaces;
+    int padding = w - s.size(); // count excess room to pad
+    for (int i = 0; i < padding / 2; ++i)
+        spaces << " ";
+    ss << spaces.str() << s << spaces.str(); // format with padding
+    if (padding > 0 && padding % 2 != 0)     // if odd #, add 1 space
+        ss << " ";
+    return ss.str();
+}
+
+void b()
+{
+    SetConsoleTextAttribute(h, 14);
+    cout << " | ";
+    SetConsoleTextAttribute(h, 7);
+}
+
+void l(int e)
+{
+    SetConsoleTextAttribute(h, 14);
+    cout << " +" << string(e, '-') << "+\n";
+    SetConsoleTextAttribute(h, 7);
+}
 
 // -------------------- HASH --------------------
 
@@ -25,10 +84,6 @@ int hashFunc(string c, int m, int funcType) // funcType: 1 = Letra 0 = Numero
     if (funcType)
     {
         int lengthC = c.length();
-        // int highChar = 0;
-        // for (int i = 0; i < lengthC; i++)
-        //     if (c.at(i) > highChar)
-        //         highChar = c.at(i);
         int p = 122;
         for (int i = 0; i < lengthC; i++)
             hash = (p * hash + c.at(i)) % m;
@@ -59,7 +114,6 @@ void insert(HashNode *st[], int m, int funcType, string c, vector<string> vecStr
         if (c == (*x).c)
             return;
         tempAux = 1;
-        colisionsCount2++;
     }
     if (tempAux)
         colisionsCount++;
@@ -138,11 +192,9 @@ vector<string> getPrefix(TrieNode *x, string key, int d)
     vector<string> nodesWithPrefix;
     if (x == NULL)
     {
-        // cout << "\nnot found\n";
         return nodesWithPrefix;
     }
     char c = key.at(d);
-    // cout << (*x).c << "-" << (*x).sofifa_id << " ";
     if (c < (*x).c)
         return getPrefix((*x).left, key, d);
     if (c > (*x).c)
@@ -154,7 +206,6 @@ vector<string> getPrefix(TrieNode *x, string key, int d)
     if ((*x).sofifa_id != "n")
         nodesWithPrefix.push_back((*x).sofifa_id);
 
-    // cout << "\nfound: " << (*x).sofifa_id << "\n";
     return nodesWithPrefix;
 }
 
@@ -184,12 +235,38 @@ TrieNode *put(TrieNode *x, string key, string sofifa_id, int d)
 void playerCommand(TrieNode *trieRoot, HashNode **playersHashTable, int mPlayers, string nameOrPrefix)
 {
     vector<string> playersWithPrefix = getPrefix(trieRoot, nameOrPrefix, 0);
-    cout << "\nsofifa_id | name | player_positions | rating | count\n";
+    cout << "\n";
+    l(114);
+    b();
+    cout << center("sofifa_id", 10);
+    b();
+    cout << center("name", 48);
+    b();
+    cout << center("player_positions", 22);
+    b();
+    cout << center("rating", 10);
+    b();
+    cout << center("count", 10);
+    b();
+    cout << "\n";
+    l(114);
     for (int i = 0; i < playersWithPrefix.size(); i++)
     {
         HashNode *player = search(playersHashTable, playersWithPrefix[i], mPlayers, 0);
-        cout << playersWithPrefix[i] << " | " << (*player).vecStr[0] << " | " << (*player).vecStr[1] << " | " << (*player).vecFlt[1] << " | " << (*player).vecInt[0] << "\n";
+        b();
+        cout << center(playersWithPrefix[i], 10);
+        b();
+        cout << prd_string((*player).vecStr[0], 48);
+        b();
+        cout << prd_string((*player).vecStr[1], 22);
+        b();
+        cout << prd((*player).vecFlt[1], 6, 10);
+        b();
+        cout << prd((*player).vecInt[0], 0, 10);
+        b();
+        cout << "\n";
     }
+    l(114);
 }
 
 void userCommand(HashNode **usersHashTable, int mUsers, HashNode **playersHashTable, int mPlayers, string userID)
@@ -198,13 +275,39 @@ void userCommand(HashNode **usersHashTable, int mUsers, HashNode **playersHashTa
     if (user == NULL)
         return;
     int i = 0;
-    cout << "\nsofifa_id | name | global_rating | count | rating\n";
-    while (i < 20 && i < (*user).vecFlt.size())
+    cout << "\n";
+    l(114);
+    b();
+    cout << center("sofifa_id", 10);
+    b();
+    cout << center("name", 48);
+    b();
+    cout << center("global raiting", 22);
+    b();
+    cout << center("count", 10);
+    b();
+    cout << center("rating", 10);
+    b();
+    cout << "\n";
+    l(114);
+    while (i < (*user).vecFlt.size())
     {
         HashNode *player = search(playersHashTable, (*user).vecStr[i], mPlayers, 0);
-        cout << (*user).vecStr[i] << " | " << (*player).vecStr[0] << " | " << (*player).vecFlt[1] << " | " << (*player).vecInt[0] << " | " << (*user).vecFlt[i] << "\n";
+        b();
+        cout << center((*user).vecStr[i], 10);
+        b();
+        cout << prd_string((*player).vecStr[0], 48);
+        b();
+        cout << prd((*player).vecFlt[1], 6, 22);
+        b();
+        cout << prd((*player).vecInt[0], 0, 10);
+        b();
+        cout << prd((*user).vecFlt[i], 1, 10);
+        b();
+        cout << "\n";
         i++;
     }
+    l(114);
 }
 
 void topCommand(HashNode **positionsHashTable, int mPositions, HashNode **playersHashTable, int mPlayers, string positionName, int n)
@@ -212,14 +315,40 @@ void topCommand(HashNode **positionsHashTable, int mPositions, HashNode **player
     HashNode *position = search(positionsHashTable, positionName, mPositions, 1);
     if (position == NULL)
         return;
+    cout << "\n";
+    l(114);
+    b();
+    cout << center("sofifa_id", 10);
+    b();
+    cout << center("name", 48);
+    b();
+    cout << center("player_positions", 22);
+    b();
+    cout << center("rating", 10);
+    b();
+    cout << center("count", 10);
+    b();
+    cout << "\n";
+    l(114);
     int i = 0;
-    cout << "\nsofifa_id | name | player_positions | rating | count\n";
     while (i < n && i < (*position).vecFlt.size())
     {
         HashNode *player = search(playersHashTable, (*position).vecStr[i], mPlayers, 0);
-        cout << (*position).vecStr[i] << " | " << (*player).vecStr[0] << " | " << (*player).vecStr[1] << " | " << (*position).vecFlt[i] << " | " << (*player).vecInt[0] << "\n";
+        b();
+        cout << center((*position).vecStr[i], 10);
+        b();
+        cout << prd_string((*player).vecStr[0], 48);
+        b();
+        cout << prd_string((*player).vecStr[1], 22);
+        b();
+        cout << prd((*player).vecFlt[1], 6, 10);
+        b();
+        cout << prd((*player).vecInt[0], 0, 10);
+        b();
+        cout << "\n";
         i++;
     }
+    l(114);
 }
 
 void tagCommand(HashNode **tagsHashTable, int mTags, HashNode **playersHashTable, int mPlayers, vector<string> tags)
@@ -229,10 +358,6 @@ void tagCommand(HashNode **tagsHashTable, int mTags, HashNode **playersHashTable
         return;
     vector<string> tagsPlayerIDs = (*tag).vecStr;
     tags.pop_back();
-    // cout << "{";
-    // for (int j = 0; j < tagsPlayerIDs.size(); j++)
-    //     cout << tagsPlayerIDs[j] << ", ";
-    // cout << "}\n-------------------1-------------------------\n";
 
     while (!tags.empty())
     {
@@ -240,11 +365,6 @@ void tagCommand(HashNode **tagsHashTable, int mTags, HashNode **playersHashTable
         if (tag == NULL)
             return;
         vector<string> currentTagPlayerIDs = (*tag).vecStr;
-
-        // cout << "{";
-        // for (int j = 0; j < currentTagPlayerIDs.size(); j++)
-        //     cout << currentTagPlayerIDs[j] << ", ";
-        // cout << "}\n-------------------2-------------------------\n";
 
         // todo: sort and then implement a better intersection algorithm
         int i = 0;
@@ -267,19 +387,40 @@ void tagCommand(HashNode **tagsHashTable, int mTags, HashNode **playersHashTable
         tags.pop_back();
     }
 
-    // for (int j = 0; j < tagsPlayerIDs.size(); j++)
-    //     cout << tagsPlayerIDs[j] << " ";
-    // cout << "\n-------------------3-------------------------\n";
-
-    cout << "\nsofifa_id | player_positions | rating | count\n";
+    l(114);
+    b();
+    cout << center("sofifa_id", 10);
+    b();
+    cout << center("name", 48);
+    b();
+    cout << center("player_positions", 22);
+    b();
+    cout << center("rating", 10);
+    b();
+    cout << center("count", 10);
+    b();
+    cout << "\n";
+    l(114);
     for (int i = 0; i < tagsPlayerIDs.size(); i++)
     {
         HashNode *player = search(playersHashTable, tagsPlayerIDs[i], mPlayers, 0);
-        cout << tagsPlayerIDs[i] << " | " << (*player).vecStr[0] << " | " << (*player).vecStr[1] << " | " << (*player).vecFlt[1] << " | " << (*player).vecInt[0] << "\n";
+        b();
+        cout << center(tagsPlayerIDs[i], 10);
+        b();
+        cout << prd_string((*player).vecStr[0], 48);
+        b();
+        cout << prd_string((*player).vecStr[1], 22);
+        b();
+        cout << prd((*player).vecFlt[1], 6, 10);
+        b();
+        cout << prd((*player).vecInt[0], 0, 10);
+        b();
+        cout << "\n";
     }
+    l(114);
 }
 
-void processPlayers(TrieNode *trieRoot, HashNode **playersHashTable, int mPlayers)
+void proccessPlayers(TrieNode *trieRoot, HashNode **playersHashTable, int mPlayers)
 {
     for (int i = 0; i < mPlayers; i++)
         playersHashTable[i] = NULL;
@@ -309,14 +450,9 @@ void processPlayers(TrieNode *trieRoot, HashNode **playersHashTable, int mPlayer
 
         put(trieRoot, name, sofifa_id, 0);
     }
-
-    // cout << "Colisions count:" << colisionsCount << "\nColisions count 2:" << colisionsCount2 << "\n";
-
-    // colisionsCount = 0;
-    // colisionsCount2 = 0;
 }
 
-void processUsers(HashNode **usersHashTable, int mUsers, HashNode **playersHashTable, int mPlayers)
+void proccessUsers(HashNode **usersHashTable, int mUsers, HashNode **playersHashTable, int mPlayers)
 {
     int userCount = 0;
     for (int i = 0; i < mUsers; i++)
@@ -326,6 +462,8 @@ void processUsers(HashNode **usersHashTable, int mUsers, HashNode **playersHashT
     aria::csv::CsvParser parser2(f2);
     parser2.delimiter(',');
     int count = 0;
+    cout << "- Reading ratings"
+         << "\n";
     for (auto &row : parser2)
     {
         auto field = parser2.next_field();
@@ -337,30 +475,31 @@ void processUsers(HashNode **usersHashTable, int mUsers, HashNode **playersHashT
         field = parser2.next_field();
         float rating = stof(*field.data);
 
-        // if (count % 1000000 == 0)
-        // {
-        // int emptyPositions = 0;
-        // int emptyPositionsParcial = 0;
-        // for (int i = 0; i < mUsers; i++)
-        // {
-        //     if (usersHashTable[i] == NULL)
-        //     {
-        //         emptyPositions++;
-        //         emptyPositionsParcial++;
-        //     }
-        //     if (i % 25000 == 0)
-        //     {
-        //         cout << i << ": " << emptyPositionsParcial << " ";
-        //         emptyPositionsParcial = 0;
-        //     }
-        // }
-        // cout << "\n";
-        // cout << "Empty positions: " << emptyPositions << "\n";
-        // cout << "User count: " << userCount << "\n";
-        // cout << "Colisions count:" << colisionsCount << "\nColisions count 2:" << colisionsCount2 << "\n";
-        // cout << count << "\n";
-        // }
-        // count++;
+        if ((count % 1000000 == 0) && (count != 0))
+        {
+            cout << "-- Ratings count=" << count << " | time=" << totalTimeInSeconds() << "\n";
+            // int emptyPositions = 0;
+            // int emptyPositionsParcial = 0;
+            // for (int i = 0; i < mUsers; i++)
+            // {
+            //     if (usersHashTable[i] == NULL)
+            //     {
+            //         emptyPositions++;
+            //         emptyPositionsParcial++;
+            //     }
+            //     if (i % 25000 == 0)
+            //     {
+            //         cout << i << ": " << emptyPositionsParcial << " ";
+            //         emptyPositionsParcial = 0;
+            //     }
+            // }
+            // cout << "\n";
+            // cout << "Empty positions: " << emptyPositions << "\n";
+            // cout << "User count: " << userCount << "\n";
+            // cout << "Colisions count:" << colisionsCount << "\n";
+            // cout << count << "\n";
+        }
+        count++;
 
         HashNode *player = search(playersHashTable, sofifa_id, mPlayers, 0);
         HashNode *user = search(usersHashTable, user_id, mUsers, 0);
@@ -376,29 +515,38 @@ void processUsers(HashNode **usersHashTable, int mUsers, HashNode **playersHashT
         else
         {
             int pos = 0;
-            while (pos < (*user).vecFlt.size() && (*user).vecFlt[pos] > rating)
-                pos++;
 
-            if (pos == (*user).vecFlt.size())
+            int vecSize = (*user).vecFlt.size();
+            if (vecSize < 20 || (*user).vecFlt[vecSize - 1] < rating)
             {
-                (*user).vecFlt.push_back(rating);
-                (*user).vecStr.push_back(sofifa_id);
-            }
-            else
-            {
-                (*user).vecFlt.insert((*user).vecFlt.begin() + pos, rating);
-                (*user).vecStr.insert((*user).vecStr.begin() + pos, sofifa_id);
+
+                while (pos < (*user).vecFlt.size() && (*user).vecFlt[pos] > rating)
+                    pos++;
+
+                if (pos == (*user).vecFlt.size())
+                {
+                    (*user).vecFlt.push_back(rating);
+                    (*user).vecStr.push_back(sofifa_id);
+                }
+                else
+                {
+                    (*user).vecFlt.insert((*user).vecFlt.begin() + pos, rating);
+                    (*user).vecStr.insert((*user).vecStr.begin() + pos, sofifa_id);
+                }
+                if (vecSize >= 20)
+                {
+                    (*user).vecFlt.pop_back();
+                    (*user).vecStr.pop_back();
+                }
             }
         }
 
         (*player).vecInt[0] += 1;
         (*player).vecFlt[0] += rating;
-
-        // users[id]->[[ 41244, 4.6 ], [ 41244, 4.5 ], , [ 41244, 3.5 ]] "412312"->["23123", 4.5]
     }
 }
 
-void processPositions(HashNode **positionsHashTable, int mPositions, HashNode **playersHashTable, int mPlayers)
+void proccessPositions(HashNode **positionsHashTable, int mPositions, HashNode **playersHashTable, int mPlayers)
 {
     for (int i = 0; i < mPositions; i++)
         positionsHashTable[i] = NULL;
@@ -468,7 +616,7 @@ void processPositions(HashNode **positionsHashTable, int mPositions, HashNode **
     }
 }
 
-void processTags(HashNode **tagsHashTable, int mTags)
+void proccessTags(HashNode **tagsHashTable, int mTags)
 {
     for (int i = 0; i < mTags; i++)
         tagsHashTable[i] = NULL;
@@ -488,9 +636,6 @@ void processTags(HashNode **tagsHashTable, int mTags)
         field = parser3.next_field();
         string tagName = *field.data;
 
-        // if (sofifa_id == "202126")
-        //     cout << "-------------" << tagName << "\n";
-
         HashNode *tag = search(tagsHashTable, tagName, mTags, 1);
         if (tag == NULL)
         {
@@ -508,32 +653,48 @@ void processTags(HashNode **tagsHashTable, int mTags)
             if (!found)
                 (*tag).vecStr.push_back(sofifa_id);
         }
-        // if ((count22 % 1000 == 0) || (count22 > 38000))
-        //     cout << count22 << "\n";
-        // count22++;
     }
 }
 
-void processData(TrieNode *trieRoot, HashNode **playersHashTable, int mPlayers, HashNode **usersHashTable, int mUsers, HashNode **positionsHashTable, int mPositions, HashNode **tagsHashTable, int mTags)
+void proccessData(TrieNode *trieRoot, HashNode **playersHashTable, int mPlayers, HashNode **usersHashTable, int mUsers, HashNode **positionsHashTable, int mPositions, HashNode **tagsHashTable, int mTags)
 {
-    processPlayers(trieRoot, playersHashTable, mPlayers);
-    processUsers(usersHashTable, mUsers, playersHashTable, mPlayers);
-    processPositions(positionsHashTable, mPositions, playersHashTable, mPlayers);
-    processTags(tagsHashTable, mTags);
+    cout << "------- Proccess data -------\n\n";
+
+    colisionsCount = 0;
+    cout << "Proccess players\n";
+    proccessPlayers(trieRoot, playersHashTable, mPlayers);
+    cout << "playersHashTable | m=" << mPlayers << " | colisions=" << colisionsCount << " | time=" << totalTimeInSeconds() << "\n\n";
+
+    colisionsCount = 0;
+    cout << "Proccess users\n";
+    proccessUsers(usersHashTable, mUsers, playersHashTable, mPlayers);
+    cout << "usersHashTable | m=" << mUsers << " | colisions=" << colisionsCount << " | time=" << totalTimeInSeconds() << "\n\n";
+
+    colisionsCount = 0;
+    cout << "Proccess positions\n";
+    proccessPositions(positionsHashTable, mPositions, playersHashTable, mPlayers);
+    cout << "positionsHashTable | m=" << mPositions << " | colisions=" << colisionsCount << " | time=" << totalTimeInSeconds() << "\n\n";
+
+    colisionsCount = 0;
+    cout << "Proccess tags\n";
+    proccessTags(tagsHashTable, mTags);
+    cout << "tagsHashTable | m=" << mTags << " | colisions=" << colisionsCount << " | time=" << totalTimeInSeconds() << "\n\n";
+
+    cout << "Data proccess time: " << totalTimeInSeconds() << "\n\n";
+
+    cout << "-----------------------------\n\n";
 
     return;
-    // Statistics
-    cout << "Colisions count:" << colisionsCount << "\nColisions count 2:" << colisionsCount2 << "\n";
 
-    int emptyPositions = 0;
-    for (int i = 0; i < mUsers; i++)
-    {
-        if (usersHashTable[i] == NULL)
-        {
-            emptyPositions++;
-        }
-    }
-    cout << "Empty positions: " << emptyPositions << "\n";
+    // int emptyPositions = 0;
+    // for (int i = 0; i < mUsers; i++)
+    // {
+    //     if (usersHashTable[i] == NULL)
+    //     {
+    //         emptyPositions++;
+    //     }
+    // }
+    // cout << "Empty positions: " << emptyPositions << "\n";
     // cout << "User count: " << userCount << "\n";
 }
 
@@ -651,40 +812,50 @@ void console(TrieNode *trieRoot, HashNode **playersHashTable, int mPlayers, Hash
 
 int main()
 {
-
-    // -----------
-    chrono::steady_clock::time_point begin;
-    chrono::steady_clock::time_point end;
-    float totalTimeInSeconds;
-    begin = chrono::steady_clock::now();
-    // -----------
+    startTime = chrono::steady_clock::now();
 
     int mPlayers = 70000; // 2*19000
     HashNode **playersHashTable = new HashNode *[mPlayers]();
     TrieNode *trieRoot = new TrieNode();
 
-    int mUsers = 580000; // 2 * 140000
+    int mUsers = 200000; // 2 * 140000
     HashNode **usersHashTable = new HashNode *[mUsers]();
 
-    int mPositions = 200;
+    int mPositions = 20;
     HashNode **positionsHashTable = new HashNode *[mPositions]();
 
     int mTags = 5000;
     HashNode **tagsHashTable = new HashNode *[mTags]();
 
-    processData(trieRoot, playersHashTable, mPlayers, usersHashTable, mUsers, positionsHashTable, mPositions, tagsHashTable, mTags);
+    proccessData(trieRoot, playersHashTable, mPlayers, usersHashTable, mUsers, positionsHashTable, mPositions, tagsHashTable, mTags);
 
     // for (int i = 0; i < mPositions; i++)
     // {
     //     if (positionsHashTable[i] != NULL)
+    //     {
     //         cout << (*positionsHashTable[i]).c << " ";
+    //         HashNode *position = (*positionsHashTable[i]).next;
+    //         while (position != NULL)
+    //         {
+    //             cout << (*position).c << " ";
+    //             position = (*position).next;
+    //         }
+    //     }
     // }
     // cout << "\n";
 
     // for (int i = 0; i < mTags; i++)
     // {
     //     if (tagsHashTable[i] != NULL)
+    //     {
     //         cout << "|" << (*tagsHashTable[i]).c << "| ";
+    //         HashNode *tag = (*tagsHashTable[i]).next;
+    //         while (tag != NULL)
+    //         {
+    //             cout << "|" << (*tag).c << "| ";
+    //             tag = (*tag).next;
+    //         }
+    //     }
     // }
     // cout << "\n";
 
@@ -696,12 +867,6 @@ int main()
     // tagCommand(tagsHashTable, mTags, playersHashTable, mPlayers, tagsTest);
     // tagsTest = {"Brazil", "Dribbler", "Playmaker", "Juventus"};
     // tagCommand(tagsHashTable, mTags, playersHashTable, mPlayers, tagsTest);
-
-    // -----------
-    end = chrono::steady_clock::now();
-    totalTimeInSeconds = float(chrono::duration_cast<chrono::nanoseconds>(end - begin).count() / float(1000000000));
-    cout << "Data process time: " << totalTimeInSeconds << "\n";
-    // -----------
 
     console(trieRoot, playersHashTable, mPlayers, usersHashTable, mUsers, positionsHashTable, mPositions, tagsHashTable, mTags);
     return 0;
