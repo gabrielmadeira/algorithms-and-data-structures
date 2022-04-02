@@ -27,6 +27,8 @@ float totalTimeInSeconds()
     return float(chrono::duration_cast<chrono::nanoseconds>(endTime - startTime).count() / float(1000000000));
 };
 
+// ------------------------------------------- CONSOLE ---------------------------------------------
+
 string prd(const double x, const int decDigits, const int width)
 {
     stringstream ss;
@@ -171,7 +173,7 @@ TrieNode *get(TrieNode *x, string key, int d)
     if (c > (*x).c)
         return get((*x).right, key, d);
     if (d < key.size() - 1)
-        return get((*x).mid, key, d + 1);
+        return get((*x).    mid, key, d + 1);
 
     cout << "\nfound: " << (*x).sofifa_id << "\n";
     return x;
@@ -367,7 +369,12 @@ void tagCommand(HashNode **tagsHashTable, int mTags, HashNode **playersHashTable
 {
     HashNode *tag = search(tagsHashTable, tags.back(), mTags, 1);
     if (tag == NULL)
+    {
+        SetConsoleTextAttribute(h, 12);
+        cout << "\nNo players were found with tags that match this input.\n";
+        SetConsoleTextAttribute(h, 7);
         return;
+    }
     vector<string> tagsPlayerIDs = (*tag).vecStr;
     tags.pop_back();
 
@@ -428,6 +435,133 @@ void tagCommand(HashNode **tagsHashTable, int mTags, HashNode **playersHashTable
         cout << prd((*player).vecInt[0], 0, 10);
         b();
         cout << "\n";
+    }
+    l(114);
+    cout << tagsPlayerIDs.size() << " players found that contain all listed tags.\n\n";
+}
+
+void teamCommand(HashNode **tagsHashTable, int mTags, HashNode **playersHashTable, int mPlayers, vector<string> tags)
+{
+    HashNode *tag = search(tagsHashTable, tags.back(), mTags, 1);
+    if (tag == NULL)
+        return;
+    int i, j, w, pos;
+    vector<string> tagsPlayerIDs = (*tag).vecStr;
+    vector<string> positionNames = {"CB", "RM", "CDM", "CF", "RWB", "ST", "RW", "CM", "GK", "LB", "LWB", "LM", "RB", "CAM", "LW"};
+
+    int bestPlayersPos[15];
+    double bestRating[15];
+    for(i=0;i<15;i++)
+    {
+        bestPlayersPos[i] = -1;
+        bestRating[i] = 0;
+    }
+        
+    tags.pop_back();
+
+    while (!tags.empty())
+    {
+        tag = search(tagsHashTable, tags.back(), mTags, 1);
+        if (tag == NULL)
+            return;
+        vector<string> currentTagPlayerIDs = (*tag).vecStr;
+
+        // todo: sort and then implement a better intersection algorithm
+        int i = 0;
+        while (i < tagsPlayerIDs.size())
+        {
+            int found = 0;
+            for (int j = 0; j < currentTagPlayerIDs.size(); j++)
+            {
+                if (tagsPlayerIDs[i] == currentTagPlayerIDs[j])
+                {
+                    found = 1;
+                    break;
+                }
+            }
+            if (found)
+                i++;
+            else
+                tagsPlayerIDs.erase(tagsPlayerIDs.begin() + i);
+        }
+        tags.pop_back();
+    }
+
+    for (i = 0; i < tagsPlayerIDs.size(); i++)
+    {
+        HashNode *player = search(playersHashTable, tagsPlayerIDs[i], mPlayers, 0);
+        
+        string positionName;
+        string playerPositions = (*player).vecStr[1];
+        j = 0;
+        while (j < playerPositions.size())
+        {
+            if (playerPositions[j] != ',')
+            {
+                positionName.push_back(playerPositions[j]);
+                if ((j + 1 == playerPositions.size()) || (playerPositions[j + 1] == ','))
+                {
+                    for(w = 0; w<15; w++)
+                    {
+                        if(positionName == positionNames[w])
+                        {
+                            if(bestPlayersPos[w] == -1) // Se a posição estiver vaga
+                            {
+                                //cout << "( " << (*player).vecStr[0] << " : " << positionName << " )";
+                                bestPlayersPos[w] = i;
+                                bestRating[w] = (*player).vecFlt[1];
+                            }
+                            else if ((*player).vecFlt[1] > bestRating[w] && (*player).vecInt[0] >= 100)
+                            {
+                                //cout << "( " << (*player).vecStr[0] << " : " << positionName << " )";
+                                bestPlayersPos[w] = i;
+                                bestRating[w] = (*player).vecFlt[1];
+                            }
+                        }
+                    }
+                    positionName = "";
+                }
+                j++;
+            }
+            else
+                j += 2;
+        }
+    }        
+    //CB RM CDM CF RWB ST RW CM GK LB LWB LM RB CAM LW
+    l(114);
+    b();
+    cout << center("sofifa_id", 10);
+    b();
+    cout << center("name", 48);
+    b();
+    cout << center("position", 22);
+    b();
+    cout << center("rating", 10);
+    b();
+    cout << center("count", 10);
+    b();
+    cout << "\n";
+    l(114);
+    
+    for (i = 0; i < 15; i++)
+    {
+        if(bestPlayersPos[i] != -1)
+        {
+            HashNode *player = search(playersHashTable, tagsPlayerIDs[bestPlayersPos[i]], mPlayers, 0);
+            b();
+            cout << center(tagsPlayerIDs[bestPlayersPos[i]], 10);
+            b();
+            cout << prd_string((*player).vecStr[0], 48);
+            b();
+            cout << prd_string(positionNames[i], 22);
+            b();
+            cout << prd((*player).vecFlt[1], 6, 10);
+            b();
+            cout << prd((*player).vecInt[0], 0, 10);
+            b();
+            cout << "\n";
+        }
+        
     }
     l(114);
 }
@@ -701,7 +835,25 @@ void console(TrieNode *trieRoot, HashNode **playersHashTable, int mPlayers, Hash
             {
                 return;
             }
-            cout << "Your command: '" << command << "' is missing arguments/incorrect\n";
+            if (command == "help\0")
+            {
+                SetConsoleTextAttribute(h, 11);
+                cout << "\nCommands:\n";
+                cout << "player prefix = Returns data of all players with that prefix.\n";
+                cout << "user X = Returns data of the 20 players best rated by user X.\n";
+                cout << "topX 'position' = Returns data of the X best players that play in the 'position'.\n";
+                cout << "tags 'tag1' 'tag2' ... = Returns data of all players that have the listed tags. \n";
+                cout << "team 'tag' tag2' ... = Returns a list of the best players for position that have the listed tags. \n";
+                cout << "exit = Ends the program.\n";
+                cout << "help = Shows instructions for all commands.\n\n";
+                SetConsoleTextAttribute(h, 7);
+            }
+            else
+            {
+                SetConsoleTextAttribute(h, 12);
+                cout << "Your command: '" << command << "' is missing arguments/incorrect\n";
+                SetConsoleTextAttribute(h, 7);
+            }   
             continue;
         }
 
@@ -720,29 +872,45 @@ void console(TrieNode *trieRoot, HashNode **playersHashTable, int mPlayers, Hash
                 userCommand(usersHashTable, mUsers, playersHashTable, mPlayers, command2);
             }
             else
+            {
+                SetConsoleTextAttribute(h, 12);
                 cout << "user id's are composed only by numbers\n";
+                SetConsoleTextAttribute(h, 7);
+            }
             continue;
         }
 
-        if (command1 == "tags\0")
+        if (command1 == "tags\0" || command1 == "team\0")
         {
             tags.clear();
             while (end != -1 && command2.at(0) == '\'')
             {
                 end = command2.find(" '"); //Procura o fim da palavra mais a esquerda
 
-                command1 = command2.substr(0, end);                    //Salva a palavra mais a esquerda
+                commandN = command2.substr(0, end);                    //Salva a palavra mais a esquerda
                 command2 = command2.substr(end + 1, command.length()); //Separa o resto da frase da primeira palavra
 
-                tamanho = command1.length();
-                if (command1.at(0) == '\'' && command1.at(tamanho - 1) == '\'' && tamanho > 2)
+                tamanho = commandN.length();
+                if (commandN.at(0) == '\'' && commandN.at(tamanho - 1) == '\'' && tamanho > 2)
                 {
-                    command1 = command1.substr(1, command1.length() - 2);
-                    tags.push_back(command1); // Coloca a palavra mais a esquerda no fim da lista
+                    commandN = commandN.substr(1, commandN.length() - 2);
+                    tags.push_back(commandN); // Coloca a palavra mais a esquerda no fim da lista
                 }
             }
             if (!(tags.empty()))
-                tagCommand(tagsHashTable, mTags, playersHashTable, mPlayers, tags);
+            {
+                if (command1 == "tags\0")
+                    tagCommand(tagsHashTable, mTags, playersHashTable, mPlayers, tags);
+                else
+                    teamCommand(tagsHashTable, mTags, playersHashTable, mPlayers, tags);
+            }
+            else
+            {
+                SetConsoleTextAttribute(h, 12);
+                cout << "Your 2nd argument is missing the necessary apostrophes -> '' <- around it\n";
+                SetConsoleTextAttribute(h, 7);
+            }
+                
             continue;
         }
 
@@ -763,11 +931,18 @@ void console(TrieNode *trieRoot, HashNode **playersHashTable, int mPlayers, Hash
                     topCommand(positionsHashTable, mPositions, playersHashTable, mPlayers, command2, stoi(commandN));
                 }
                 else
+                {
+                    SetConsoleTextAttribute(h, 12);
                     cout << "Your 2nd argument is missing the necessary apostrophes -> '' <- around it\n";
+                    SetConsoleTextAttribute(h, 7);
+                }
+                    
                 continue;
             }
         }
+        SetConsoleTextAttribute(h, 12);
         cout << "The command '" << command << "' has no designed function.\n\0";
+        SetConsoleTextAttribute(h, 7);
     };
 }
 
